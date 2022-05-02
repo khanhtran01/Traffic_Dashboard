@@ -58,15 +58,11 @@
                 <form class="setTraffic_time_form" action="" method="post">
                     {% csrf_token %}
                     <div class="radio-setlight">
-                        <input type="radio" id="red" name="Setlight" value="red">
+                        <input type="radio" id="red" name="Setlight" value="emer">
                         <label for="red">Đỏ</label>
                     </div>
                     <div class="radio-setlight">
-                        <input type="radio" id="green" name="Setlight" value="green">
-                        <label for="green">Xanh</label>
-                    </div>
-                    <div class="radio-setlight">
-                        <input type="radio" id="yellow" name="Setlight" value="yellow">
+                        <input type="radio" id="yellow" name="Setlight" value="slow">
                         <label for="yellow">Vàng</label>
                     </div>
                     <input type="submit" value="Chỉnh sửa">

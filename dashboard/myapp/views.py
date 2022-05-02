@@ -3,11 +3,24 @@ from django.http import HttpResponse, JsonResponse
 from .models import Humis, Temp, BadCar
 from .forms import ResgisterForm
 from django.views import View
-import serial.tools.list_ports
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.db.models.functions import ExtractWeek, ExtractYear, ExtractMonth
+from django.db.models import Avg
 from django.contrib import messages
+from Adafruit_IO import Client
 import datetime
+
+# @login_required(login_url='myapp:login')
+def pushControl(data):
+    aio = Client('khanhtran01', 'aio_OpaI071fRZr3S64zA2MUmiPPZGmx')
+    feed = aio.feeds('control')
+    res = ''
+    if data == 'emer':
+        res = '{"emer":"1","slow":"0"}'
+    else: res = '{"emer":"0","slow":"1"}'
+    aio.send_data(feed.key, res)
+    
 
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
@@ -35,8 +48,94 @@ def pushHumi(request):
 
 @login_required(login_url='myapp:login')
 def dashBoardView(request):
+    if request.method == "POST":
+        pushControl(request.POST['Setlight'])
+        return render(request, "myapp/dashboard.html")
+        
+    
     return render(request, "myapp/dashboard.html")
 
+def initDataWeek(request):
+    Humidata = (Humis.objects
+                .annotate(week = ExtractWeek('time'))
+                .values('week')
+                .annotate(avg_humi=Avg('humi')))
+    Tempdata = (Temp.objects
+                .annotate(week = ExtractWeek('time'))
+                .values('week')
+                .annotate(avg_temp=Avg('temp')))
+    HumidataMonth = (Humis.objects
+                .annotate(month = ExtractMonth('time'))
+                .values('month')
+                .annotate(avg_humi=Avg('humi')))
+    TempdataMonth = (Temp.objects
+                .annotate(month = ExtractMonth('time'))
+                .values('month')
+                .annotate(avg_temp=Avg('temp')))
+    
+    BadcarWeek = (BadCar.objects
+                .annotate(week = ExtractWeek('time'))
+                .values('week')
+                .annotate(avg=Avg('badcar')))
+    BadcarMonth = (BadCar.objects
+                .annotate(month = ExtractMonth('time'))
+                .values('month')
+                .annotate(avg=Avg('badcar')))
+    
+    # Humidata.
+    week = []
+    humi = []
+    tempw = []
+    temp = []
+    badcarw = []
+    badcarwd = []
+    badcarm = []
+    badcarmd = []
+    
+    hummimonth = []
+    humimonthdata = []
+    tempmonth = []
+    tempmonthdata = []
+    
+    for i in Humidata:
+        week += [i['week']]
+        humi += [i['avg_humi']]
+    
+    for i in Tempdata:
+        tempw += [i['week']]
+        temp += [i['avg_temp']]
+    
+    for i in HumidataMonth:
+        hummimonth += [i['month']]
+        humimonthdata += [i['avg_humi']]
+    
+    for i in TempdataMonth:
+        tempmonth += [i['month']]
+        tempmonthdata += [i['avg_temp']]
+        
+    for i in BadcarWeek:
+        badcarw += [i['week']]
+        badcarwd += [i['avg']]
+        
+    for i in BadcarMonth:
+        badcarm += [i['month']]
+        badcarmd += [i['avg']]
+    
+    res = {
+        'humiweek' : week,
+        'humi' : humi,
+        'tempweek' : tempw,
+        'temp' : temp,
+        'humimonth' : hummimonth,
+        'humimonthdata' : humimonthdata,
+        'tempmonth' : tempmonth,
+        'tempmonthdata' : tempmonthdata,
+        'badcarweek' : badcarw,
+        'badcarweekdata' : badcarwd,
+        'badcarmonth' : badcarm,
+        'badcarmonthdata' : badcarmd
+    }
+    return JsonResponse(res, status= 200)
 
 # @login_required(login_url='myapp:login')
 def initHumi(request):

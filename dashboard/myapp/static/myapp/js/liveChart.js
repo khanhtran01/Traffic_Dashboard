@@ -24,6 +24,33 @@ function initHumi(){
 	xhttp.open("GET", "/myapp/initHumi");
 	xhttp.send();
 }
+
+function initDataForWeek(){
+	const xhttp = new XMLHttpRequest();
+	xhttp.onload = function () {
+		console.log(JSON.parse(this.responseText));
+		updateChartInitWeek(humiChart_week, JSON.parse(this.responseText).humiweek, JSON.parse(this.responseText).humi)
+		updateChartInitWeek(tempChart_week, JSON.parse(this.responseText).tempweek, JSON.parse(this.responseText).temp)
+		updateChartInitWeek(humiChart_month, JSON.parse(this.responseText).humimonth, JSON.parse(this.responseText).humimonthdata)
+		updateChartInitWeek(tempChart_month, JSON.parse(this.responseText).tempmonth, JSON.parse(this.responseText).tempmonthdata)
+		updateChartInitWeek(badCarChart_week, JSON.parse(this.responseText).badcarweek, JSON.parse(this.responseText).badcarweekdata)
+		updateChartInitWeek(badCarChart_month, JSON.parse(this.responseText).badcarmonth, JSON.parse(this.responseText).badcarmonthdata)
+		console.log(this.responseText)
+	}
+	xhttp.open("GET", "/myapp/initWeek");
+	xhttp.send();
+}
+function updateChartInitWeek(chartName, xarrayInput, yarrayInput) {
+	yarray = chartName.data.datasets[0].data;
+	xarray = chartName.data.labels;
+	for (var i = 0; i < yarrayInput.length; i++) {
+		yarray.push(yarrayInput[i])
+		xarray.push(xarrayInput[i]);
+	}
+	chartName.options.scales.yAxes[0].ticks.max = Math.max.apply(Math, yarrayInput) + 15;
+	chartName.update();
+}
+initDataForWeek()
 // function initTemp(){
 // 	const xhttp = new XMLHttpRequest();
 // 	xhttp.onload = function () {
