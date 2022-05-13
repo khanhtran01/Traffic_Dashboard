@@ -6,6 +6,5 @@ function tabsto(index){
             listboard[i].classList.remove("activate");
         }
         curr.classList.add("activate");
-        console.log("add complete")
     
 }

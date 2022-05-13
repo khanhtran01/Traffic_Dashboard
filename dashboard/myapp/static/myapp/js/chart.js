@@ -101,7 +101,7 @@ var humiChart_week = new Chart("humiChart_week", {
     },
     title: {
       display: true,
-      text: "Biểu đồ số xe vượt đèn đỏ tại Ngã tư Hàng Xanh"
+      text: "Biểu đồ độ ẩm tại Ngã tư Hàng Xanh"
     }
   }
 });
@@ -127,7 +127,7 @@ var tempChart_week = new Chart("tempChart_week", {
     },
     title: {
       display: true,
-      text: "Biểu đồ số xe vượt đèn đỏ tại Ngã tư Hàng Xanh"
+      text: "Biểu đồ nhiệt độ tại Ngã tư Hàng Xanh"
     }
   }
 });
@@ -154,7 +154,7 @@ var humiChart_month = new Chart("humiChart_month", {
     },
     title: {
       display: true,
-      text: "Biểu đồ số xe vượt đèn đỏ tại Ngã tư Hàng Xanh"
+      text: "Biểu đồ độ ẩm tại Ngã tư Hàng Xanh"
     }
   }
 });
@@ -181,7 +181,7 @@ var tempChart_month = new Chart("tempChart_month", {
     },
     title: {
       display: true,
-      text: "Biểu đồ số xe vượt đèn đỏ tại Ngã tư Hàng Xanh"
+      text: "Biểu đồ nhiệt độ tại Ngã tư Hàng Xanh"
     }
   }
 });

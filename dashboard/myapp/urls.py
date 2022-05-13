@@ -14,5 +14,6 @@ urlpatterns = [
     path('login/', LoginClass.as_view(), name="login"),
     path('register/', RegisterClass.as_view(), name="register"),
     path('logout/', views.logoutUser, name="logout"),
-    path('pushData', views.pushData, name="pushData")
+    path('pushData/', views.pushData, name="pushData"),
+    path('statistical_data/', views.statistical_data, name="staticaldata"),
 ]

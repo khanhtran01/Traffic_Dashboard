@@ -6,7 +6,12 @@ var xTemp = [];
 
 var yCar = [];
 var xCar = [];
+
+var count = 0;
+var count_Car = 0;
 // get init value from database
+
+
 function initHumi(){
 	const xhttp = new XMLHttpRequest();
 	xhttp.onload = function () {
@@ -21,23 +26,40 @@ function initHumi(){
 		updateChartInit(tempChart, xTemp, yTemp);
 		updateChartInit(badCarChart, xCar, yCar);
 	}
-	xhttp.open("GET", "/myapp/initHumi");
+	xhttp.open("GET", "/initHumi");
 	xhttp.send();
 }
+
+
+statistical_data();
+function statistical_data(){
+	const xhttp = new XMLHttpRequest();
+	xhttp.onload = function () {
+		temp = JSON.parse(this.responseText).temp;
+		time = JSON.parse(this.responseText).time;
+		carmonth = JSON.parse(this.responseText).carmonth;
+		totalcar = JSON.parse(this.responseText).totalcar;
+		totalcar2 = JSON.parse(this.responseText).totalcar2;
+		document.querySelector('#report1').textContent = ""+ time.slice(0,9) +" (" + temp + " độ C)";
+		document.querySelector('#report2').textContent = "Tháng "+ carmonth +" (" + totalcar + " xe)";
+		document.querySelector('#report3').textContent =  totalcar2 + " xe";
+	}
+	xhttp.open("GET", "/statistical_data");
+	xhttp.send();
+}
+
 
 function initDataForWeek(){
 	const xhttp = new XMLHttpRequest();
 	xhttp.onload = function () {
-		console.log(JSON.parse(this.responseText));
 		updateChartInitWeek(humiChart_week, JSON.parse(this.responseText).humiweek, JSON.parse(this.responseText).humi)
 		updateChartInitWeek(tempChart_week, JSON.parse(this.responseText).tempweek, JSON.parse(this.responseText).temp)
 		updateChartInitWeek(humiChart_month, JSON.parse(this.responseText).humimonth, JSON.parse(this.responseText).humimonthdata)
 		updateChartInitWeek(tempChart_month, JSON.parse(this.responseText).tempmonth, JSON.parse(this.responseText).tempmonthdata)
 		updateChartInitWeek(badCarChart_week, JSON.parse(this.responseText).badcarweek, JSON.parse(this.responseText).badcarweekdata)
 		updateChartInitWeek(badCarChart_month, JSON.parse(this.responseText).badcarmonth, JSON.parse(this.responseText).badcarmonthdata)
-		console.log(this.responseText)
 	}
-	xhttp.open("GET", "/myapp/initWeek");
+	xhttp.open("GET", "/initWeek");
 	xhttp.send();
 }
 function updateChartInitWeek(chartName, xarrayInput, yarrayInput) {
@@ -51,20 +73,6 @@ function updateChartInitWeek(chartName, xarrayInput, yarrayInput) {
 	chartName.update();
 }
 initDataForWeek()
-// function initTemp(){
-// 	const xhttp = new XMLHttpRequest();
-// 	xhttp.onload = function () {
-// 		yValues = JSON.parse(this.responseText).humidata;
-// 		xValues = JSON.parse(this.responseText).humitime;
-// 		console.log(JSON.parse(this.responseText))
-// 		updateChartInit();
-// 	}
-// 	xhttp.open("GET", "/myapp/initHumi");
-// 	xhttp.send();
-// }
-
-
-
 initHumi();
 setTimeout(live, 100);
 function live() {
@@ -74,9 +82,9 @@ function live() {
 				url: 'https://io.adafruit.com/api/v2/khanhtran01/feeds/humi-and-temp',
 				success: function (result) {
 					let time =  new Date().toLocaleTimeString();
-					// console.log(time.slice(0,8));
-					liveChartUpdate(humiChart,JSON.parse(result['last_value'])['humi'], time.slice(0,8));
-					liveChartUpdate(tempChart,JSON.parse(result['last_value'])['temp'], time.slice(0,8));
+					liveChartUpdate(humiChart,JSON.parse(result['last_value'])['humi'], time.slice(0,8), count);
+					liveChartUpdate(tempChart,JSON.parse(result['last_value'])['temp'], time.slice(0,8), count);
+					count ++;
 				}
 			});
 		}
@@ -84,23 +92,45 @@ function live() {
 		setInterval(fetchData, 5000);
 	});
 }
+initTime()
+function initTime() {
+	$.ajax({
+		url: 'https://io.adafruit.com/api/v2/khanhtran01/feeds/time',
+		success: function (result) {
+			// console.log(JSON.parse(result['last_value'])['valueTime'])
+			var listTime = JSON.parse(result['last_value'])['valueTime'].map(Number);
+			liveCar(listTime[2] + listTime[3])
+		}
+	});
+}
 
-// setTimeout(getAPI, 100);
-// function getAPI() {
-// 	$(document).ready(function () {
-// 		function getData() {
-// 			$.ajax({
-// 				url: 'https://io.adafruit.com/api/v2/khanhtran01/feeds/humi-and-temp',
-// 				success: function (result) {
-// 					console.log(JSON.parse(result['last_value']))
-// 				}
-// 			});
-// 		}
-// 		setInterval(getData, 1000);
-// 	});
-// }
 
-var count = 0;
+var CarInterval;
+function liveCar(time) {
+	time = time * 1000
+	clearInterval(CarInterval)
+	$(document).ready(function () {
+		function fetchData() {
+			$.ajax({
+				url: 'https://io.adafruit.com/api/v2/khanhtran01/feeds/bad-car',
+				success: function (result) {
+					let time =  new Date().toLocaleTimeString();
+					liveChartUpdate(badCarChart,JSON.parse(result['last_value']), time.slice(0,8), count_Car);
+					count_Car ++;
+				}
+			});
+		}
+		CarInterval =setInterval(fetchData, time);
+	});
+}
+
+
+
+
+
+
+
+
 
 function updateChartInit(chartName, xarrayInput, yarrayInput) {
 	yarray = chartName.data.datasets[0].data;
@@ -125,7 +155,7 @@ function updateChartInit(chartName, xarrayInput, yarrayInput) {
 
 
 
-function liveChartUpdate(chartName,y, x) {
+function liveChartUpdate(chartName,y, x, count) {
 	newy = y
 	// newX = humiChart.data.labels[19] + 10;
 	newX = count % 4 == 0 ? x : '';
@@ -142,22 +172,4 @@ function liveChartUpdate(chartName,y, x) {
 	}
 	chartName.data.labels.shift()
 	chartName.update();
-}
-
-function pushDatatoServer(data){
-	$.ajax({
-		url: '/myapp/pushData',
-		method: "POST",
-		headers: {
-			"X-CSRFToken": $('[name=csrfmiddlewaretoken]').val()
-		  },
-		data: {
-			humi: data['humi'],
-			temp: data['temp']
-		},
-		success: function(data){console.log("complete");},
-		error: function(errMsg) {
-			alert(JSON.stringify(errMsg));
-		}
-	});
 }

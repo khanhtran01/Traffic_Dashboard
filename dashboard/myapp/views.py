@@ -6,20 +6,33 @@ from django.views import View
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models.functions import ExtractWeek, ExtractYear, ExtractMonth
-from django.db.models import Avg
+from django.db.models import Avg, Sum
 from django.contrib import messages
 from Adafruit_IO import Client
 import datetime
 
 # @login_required(login_url='myapp:login')
 def pushControl(data):
-    aio = Client('khanhtran01', 'aio_OpaI071fRZr3S64zA2MUmiPPZGmx')
+    aio = Client('khanhtran01', 'aio_eXpn39xcivyA9FuBqbRMWF0E1NyI')
     feed = aio.feeds('control')
     res = ''
     if data == 'emer':
         res = '{"emer":"1","slow":"0"}'
     else: res = '{"emer":"0","slow":"1"}'
     aio.send_data(feed.key, res)
+
+def pushTime(data):
+    # {"changed":"0","valueTime":"[23,5,25,3]"}
+    aio = Client('khanhtran01', 'aio_eXpn39xcivyA9FuBqbRMWF0E1NyI')
+    if 'yellow' in data:
+        feed = aio.feeds('time')
+        res = '{"changed":"'+ str(data['action']) +  '","valueTime":"[' + str(data['green']) + ',' + str(data['yellow']) + ',' + str(data['green2']) + ',' + str(data['yellow2']) +  ']"}'
+    else :
+        feed = aio.feeds('control')
+        res = '{"emer":"'+ str(data['emer']) +'","slow":"'+ str(data['slow']) + '"}'
+    aio.send_data(feed.key, res)
+
+
     
 
 def is_ajax(request):
@@ -31,8 +44,8 @@ def index(request):
 @login_required(login_url='myapp:login')
 def pushHumi(request):
     if request.method == "POST":
-        humiInput = Humis(humi = int(request.POST['humi']), time= datetime.datetime.now()) 
-        humiInput.save()
+        # humiInput = Humis(humi = int(request.POST['humi']), time= datetime.datetime.now()) 
+        # humiInput.save()
         return JsonResponse({'data': "here is new data", 'message' : "input complete"}, status=200)
     else:
         return JsonResponse({'data': "here is new data", 'message' : "failed"}, status=200)
@@ -54,6 +67,23 @@ def dashBoardView(request):
         
     
     return render(request, "myapp/dashboard.html")
+def statistical_data(request):
+    temp = Temp.objects.all().order_by('-temp')[:1]
+    cars = (BadCar.objects
+                .annotate(month = ExtractMonth('time'))
+                .values('month')
+                .annotate(total=Sum('badcar')))
+    highest = cars.order_by('-total')[:1]
+    total = BadCar.objects.aggregate(Sum('badcar'))
+    des = {
+        'temp' : temp[0].temp,
+        'time' : temp[0].time,
+        'carmonth' : highest[0]['month'],
+        'totalcar' : highest[0]['total'],
+        'totalcar2' : total['badcar__sum']
+    }
+    return JsonResponse(des, status=200)
+
 
 def initDataWeek(request):
     Humidata = (Humis.objects
@@ -81,19 +111,19 @@ def initDataWeek(request):
                 .annotate(month = ExtractMonth('time'))
                 .values('month')
                 .annotate(avg=Avg('badcar')))
-    
     # Humidata.
     week = []
     humi = []
-    tempw = []
-    temp = []
+    humimonthdata = []
+    hummimonth = []
+    
+    badcarmd = []
     badcarw = []
     badcarwd = []
     badcarm = []
-    badcarmd = []
     
-    hummimonth = []
-    humimonthdata = []
+    tempw = []
+    temp = []
     tempmonth = []
     tempmonthdata = []
     
@@ -219,12 +249,54 @@ def logoutUser(request):
 @login_required(login_url='myapp:login')
 def pushData(request):
     if request.method == "POST":
-        humi_value = request.POST['humi']
-        temp_value = request.POST['temp']
-        humiInput = Humis(humi = int(humi_value), time= datetime.datetime.now())
-        tempInput = Temp(temp = int(temp_value), time= datetime.datetime.now())
-        humiInput.save()
-        tempInput.save()
-        return JsonResponse({'data': "here is new data", 'message' : "input complete"}, status=200)
-    else:
-        return JsonResponse({'data': "here is new data", 'message' : "failed"}, status=200)
+        if 'yellow_time' in request.POST:
+            
+            
+            yellow = request.POST['yellow_time']
+            green = request.POST['green_time']
+            yellow2 = request.POST['yellow_time2']
+            green2 = request.POST['green_time2']
+            action = request.POST['action']
+            if (int(yellow) + int(green)) != (int(yellow2) + int(green2)):
+                return JsonResponse({'status':False}, status=200)
+            res = {
+                'yellow' : yellow,
+                'green' : green,
+                'yellow2' : yellow2,
+                'green2' : green2,
+                'action' : action
+            }
+            pushTime(res)
+            if action == '0':
+                message = {
+                    'status' : True,
+                    'time' : int(yellow2) + int(green2)
+                }
+            else:
+                message = {
+                    'status' : True,
+                }
+            return JsonResponse(message, status=200)
+        elif 'Setlight' in request.POST:
+            res = {
+                'emer' : 0,
+                'slow' : 1
+            }
+            if request.POST['Setlight'] == 'emer':
+                res = {
+                    'emer' : 1,
+                    'slow' : 0
+                }
+            pushTime(res)
+            return JsonResponse({'status': "complete", 'message' : "success"}, status=200)
+    elif request.method == "GET":
+        if 'car' in request.GET:
+            car = BadCar(badcar = int(request.GET['car']), time = datetime.datetime.now())
+            car.save()
+            return JsonResponse({'status': "complete", 'message' : "push car"}, status=200)
+        else:
+            humi = Humis(humi = int(request.GET['humi']), time= datetime.datetime.now())
+            temp = Temp(temp = int(request.GET['temp']), time= datetime.datetime.now())
+            humi.save()
+            temp.save()
+            return JsonResponse({'status': "complete", 'message' : "push humi and temp"}, status=200)

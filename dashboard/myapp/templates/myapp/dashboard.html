@@ -26,15 +26,21 @@
                 <div class="close_icon" onclick="closeModal()">
                     <em class="fa-solid fa-xmark"></em>
                 </div>
-                <form class="Traffic_time_form" action="" method="post">
+                <form class="Traffic_time_form" action="{% url 'myapp:pushData' %}" method="post">
                     {% csrf_token %}
-                    <label for="red_time">Thời gian đèn đỏ</label>
-                    <input type="number" name="red_time" id="red_time">
-                    <label for="green_time">Thời gian đèn xanh</label>
+                    
+                    <label for="green_time">Đèn xanh 1</label>
                     <input type="number" name="green_time" id="green_time">
-                    <label for="yellow_time">Thời gian đèn vàng</label>
+                    <label for="yellow_time">Đèn vàng 1</label>
                     <input type="number" name="yellow_time" id="yellow_time">
-                    <input type="submit" value="Điều chỉnh">
+                    <label for="green_time2">Đèn xanh 2</label>
+                    <input type="number" name="green_time2" id="green_time2">
+                    <label for="yellow_time2">Đèn vàng 2</label>
+                    <input type="number" name="yellow_time2" id="yellow_time2">
+                    <div class="save_and_confirm">
+                        <input id="settimesubmit" name="action" type="submit" value="Save">
+                        <input onclick="closeModal()"name="action" id="comfirm_time" type="submit" value="Update">
+                    </div>
                 </form>
             </div>
         </div>
@@ -55,7 +61,7 @@
                 <div class="setclose_icon" onclick="closeSetModal()">
                     <em class="fa-solid fa-xmark"></em>
                 </div>
-                <form class="setTraffic_time_form" action="" method="post">
+                <form class="setTraffic_time_form" action="{% url 'myapp:pushData' %}" method="post">
                     {% csrf_token %}
                     <div class="radio-setlight">
                         <input type="radio" id="red" name="Setlight" value="emer">
@@ -65,7 +71,7 @@
                         <input type="radio" id="yellow" name="Setlight" value="slow">
                         <label for="yellow">Vàng</label>
                     </div>
-                    <input type="submit" value="Chỉnh sửa">
+                    <input onclick="closeSetModal()" type="submit" value="Chỉnh sửa">
                 </form>
             </div>
         </div>
@@ -119,105 +125,8 @@
                             </div>
 
                         </div>
-                        <!-- <div class="dropdownselection">
-                            <div class="leftsideselection">
-                                <em class="ti-save"></em>
-                                <div class="menutext">
-                                    <span>Save</span>
-                                </div>
-                            </div>
-                            <div class="rightsideselection">
-                                <em class="ti-angle-right"></em>
-                            </div>
-                        </div> -->
-
                     </div>
                 </div>
-
-                <!-- <div class="menubox">
-                    <div class="menutitle">
-                        <span>Navigation</span>
-                    </div>
-                    <div class="listmenuchoose">
-                        <div class="normalselection">
-                            <div class="leftsideselection">
-                                    <em class="ti-save"></em>
-                                <div class="menutext">
-                                    <span>Save</span>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="dropdownselection">
-                            <div class="leftsideselection">
-                                <em class="ti-save"></em>
-                                <div class="menutext">
-                                    <span>Save</span>
-                                </div>
-                            </div>
-                            <div class="rightsideselection">
-                                <em class="ti-angle-right"></em>
-                            </div>
-                        </div>
-
-                    </div>
-                </div> -->
-
-                <!-- <div class="menubox">
-                    <div class="menutitle">
-                        <span>Navigation</span>
-                    </div>
-                    <div class="listmenuchoose">
-                        <div class="normalselection">
-                            <div class="leftsideselection">
-                                    <em class="ti-save"></em>
-                                <div class="menutext">
-                                    <span>Save</span>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="normalselection">
-                            <div class="leftsideselection">
-                                    <em class="ti-save"></em>
-                                <div class="menutext">
-                                    <span>Save</span>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="normalselection">
-                            <div class="leftsideselection">
-                                    <em class="ti-save"></em>
-                                <div class="menutext">
-                                    <span>Save</span>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="normalselection">
-                            <div class="leftsideselection">
-                                    <em class="ti-save"></em>
-                                <div class="menutext">
-                                    <span>Save</span>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="normalselection">
-                            <div class="leftsideselection">
-                                <em class="ti-save"></em>
-                                <div class="menutext">
-                                    <span>Save</span>
-                                </div>
-                            </div>
-                            <div class="rightsideselection">
-                                <em class="ti-angle-right"></em>
-                            </div>
-                        </div>
-
-                    </div>
-                </div> -->
             </div>
         </div>
 
@@ -244,10 +153,6 @@
                                 <a href="">Công viên Hoàng Văn Thụ</a>
                             </div>
                         </div>
-                        {% comment %} <div class="dropdownbtn">
-                            <span class="text">Create New</span>
-                            <em class="ti-angle-down"></em>
-                        </div> {% endcomment %}
                     </div>
                     <div class="rightnav">
                         <div class="userinfo">
@@ -266,13 +171,16 @@
                 </div>
                 <div class="listreport">
                     <div class="infomation redcolor">
-                        <span>Ngày có lượng xe vượt ngưỡng cao nhất : 14/02/2022</span>
+                        <p>Thời điểm có nhiệt độ cao nhất : </p>
+                        <p id="report1"></p>
                     </div>
                     <div class="infomation redcolor">
-                        <span>Ngày có nhiệt độ cao nhất : 00/00/0000</span>
+                        <p>Tháng có số xe vượt đèn đỏ nhiều nhất :</p>
+                        <p id="report2"></p>
                     </div>
-                    <div class="infomation greencolor">
-                        <span>Ngày ít xe vượt đèn nhất : 00/00/0000</span>
+                    <div class="infomation redcolor">
+                        <p>Tổng số xe vượt đèn đỏ được ghi nhận :</p>
+                        <p id="report3"></p>
                     </div>
                     <!-- <div class="infomation bluecolor">
                         <span>Ngày có lượng xe vượt ngưỡng cao nhất : 14/02/2022</span>
@@ -349,6 +257,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="{% static 'myapp/js/liveChart.js' %}"></script>
     <script src="{% static 'myapp/js/tabs.js' %}"></script>
+    <script src="{% static 'myapp/js/pushdata.js' %}"></script>
 
 </body>
 
